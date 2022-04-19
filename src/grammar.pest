@@ -5,11 +5,14 @@ COMMENT = _{ multi_comment | line_comment }
 multi_comment = @{ "/*" ~ (!"*/" ~ ANY)* ~ "*/" }
 line_comment = @{ "//" ~ (!"\n" ~ ANY)* }
 
-file = _{ SOI ~ (import | data | service)* ~ EOI }
+file = _{ SOI ~ needs? ~ (import | data | service)* ~ EOI }
 
-import = { attributes? ~ "import" ~ path ~ ";" }
-data = { attributes? ~ "data" ~ ident ~ "{" ~ property* ~ "}" ~ ";" }
-service = { attributes? ~ "service" ~ ident ~ "{" ~ (handler|depends)* ~ "};" }
+needs = { "needs" ~ "<" ~ (ident ~ ",")* ~ ident ~ ">" }
+
+import = { attributes? ~ "import" ~ path ~ generic? ~ ";" }
+data = { attributes? ~ "data" ~ ident ~ generic? ~ "{" ~ property* ~ "}" ~ ";" }
+service = { attributes? ~ "service" ~ ident ~ "{" ~ (handler|depends)* ~ "}" ~ ";" }
+template = { attributes? ~ "template" ~ ident ~ generic ~ "{" ~ (handler|depends)* ~ "}" ~ "for" ~ generic ~ ";" }
 
 property = { attributes? ~ ident ~ ":" ~ typ ~ "," }
 
@@ -19,9 +22,10 @@ depends = { attributes? ~ "depends" ~ "on" ~ path ~ ";" }
 arguments = _{ (argument ~ ",")* ~ argument }
 argument = { attributes? ~ ident ~ ":" ~ typ }
 
-typ = @{ path }
-// TODO: maybe add proper generic support one day
-//typ = @{ path ~ (ws* ~ "<" ~ ws* ~ typ ~ (ws* ~ "," ~ ws* ~ typ)* ~ ws* ~ ">")? }
+generic = { ("<" ~ types ~ ">") }
+
+typ = @{ path ~ generic? }
+types = _{ (typ ~ ",")* ~ typ }
 path = @{ ident ~ ("::" ~ ident)* }
 ident = @{ ASCII_ALPHA_UNDER ~ ASCII_ALPHANUMERIC_UNDER* }
 
